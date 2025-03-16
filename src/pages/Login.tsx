@@ -13,7 +13,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
@@ -27,7 +27,7 @@ const Login = () => {
     
     try {
       setIsLoading(true);
-      await api.auth.login(formData.username, formData.password);
+      await api.auth.login(formData.email, formData.password);
       toast.success("Login successful");
       navigate("/dashboard");
     } catch (error) {
@@ -58,10 +58,10 @@ const Login = () => {
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    type="text"
-                    name="username"
-                    placeholder="Username"
-                    value={formData.username}
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={formData.email}
                     onChange={handleChange}
                     className="pl-10"
                     required

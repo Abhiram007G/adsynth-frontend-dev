@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, Edit, Trash2, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Copy, Edit, Trash2, Plus, Loader2, Bot, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -54,6 +56,7 @@ const CampaignDetail = () => {
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
+  const [progress, setProgress] = useState(0);
 
   // Get available providers and models
   const providers = api.llmProviders.getProviders();
@@ -100,6 +103,7 @@ const CampaignDetail = () => {
       
       const rotateSteps = () => {
         setLoadingStep(loadingSteps[currentStep]);
+        setProgress(Math.min(100, (currentStep + 1) * (100 / loadingSteps.length)));
         currentStep = (currentStep + 1) % loadingSteps.length;
         timeoutId = window.setTimeout(rotateSteps, 2500);
       };
@@ -110,6 +114,7 @@ const CampaignDetail = () => {
     return () => {
       window.clearTimeout(timeoutId);
       setLoadingStep("");
+      setProgress(0);
     };
   }, [isGenerating]);
 
@@ -172,12 +177,12 @@ const CampaignDetail = () => {
     );
   }
   const loadingSteps = [
-    "Scraping data from Reddit...",
-    "Analyzing audience sentiment...",
-    "Identifying pain points...",
-    "Researching market trends...",
-    "Crafting persuasive content...",
-    "Preparing final script..."
+    "Scraping data from Reddit... 🔍",
+    "Analyzing audience sentiment... 🧠",
+    "Identifying pain points... 🎯",
+    "Researching market trends... 📊",
+    "Crafting persuasive content... ✍️",
+    "Preparing final script... 🚀"
   ];
 
   if (!campaign) {
@@ -438,17 +443,23 @@ const CampaignDetail = () => {
                     </Button>
                   </DialogFooter>
                   {isGenerating && (
-                    <div className="mt-4 p-4 border border-primary/20 rounded-md bg-primary/5 animate-pulse">
-                      <div className="flex items-center">
-                        <div className="mr-3 flex-shrink-0">
-                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                        </div>
-                        <div className="min-h-[28px] flex items-center">
-                          <p className="text-sm transition-opacity duration-200">
+                    <div className="mt-4">
+                      <Alert className="bg-primary/5 border-primary/20">
+                        <Bot className="h-5 w-5 text-primary animate-pulse" />
+                        <AlertTitle className="text-primary mb-2">Our agents are working on your script</AlertTitle>
+                        <AlertDescription className="text-sm">
+                          <div className="mb-3">
                             {loadingStep}
-                          </p>
-                        </div>
-                      </div>
+                          </div>
+                          <Progress value={progress} className="h-2" />
+                          <div className="flex items-center gap-2 mt-4 text-muted-foreground">
+                            <Bell className="h-4 w-4" />
+                            <p className="text-xs">
+                              You can close this dialog. We'll notify you when your script is ready!
+                            </p>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
                     </div>
                   )}
                   
