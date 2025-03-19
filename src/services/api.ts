@@ -1,5 +1,11 @@
-
 import { toast } from "sonner";
+
+// Add type declaration for ImportMeta
+declare global {
+  interface ImportMetaEnv {
+    VITE_APP_API_URL: string;
+  }
+}
 
 // Base API URL - using environment variable
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
@@ -95,7 +101,10 @@ export const api = {
 
   // Handle response
   handleResponse: async (response: Response) => {
-    if (response.status === 401) {
+    // Skip token refresh for login endpoint
+    const isLoginEndpoint = response.url.includes('/api/token');
+    
+    if (response.status === 401 && !isLoginEndpoint) {
       // Token expired, try to refresh
       const newToken = await api.refreshToken();
       if (!newToken) {
@@ -129,14 +138,16 @@ export const api = {
       } else if (error.message) {
         errorMessage = error.message.toString();
       }
-      
-      // Show error toast
-      toast.error(errorMessage);
+
+      // For login endpoint, don't show toast as we'll handle it in the component
+      if (!isLoginEndpoint) {
+        toast.error(errorMessage);
+      }
       
       // Create error object with the extracted message
       const customError = new Error(errorMessage);
       // Attach original error data for debugging
-(customError as any).originalError = error;
+      (customError as any).originalError = error;
       throw customError;
     }
     

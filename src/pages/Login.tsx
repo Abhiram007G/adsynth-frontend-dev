@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, FormEvent, ChangeEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
@@ -7,32 +6,49 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/services/api";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    setError(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     try {
       setIsLoading(true);
       await api.auth.login(formData.email, formData.password);
       toast.success("Login successful");
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
+      // Handle network/server down error
+      if (!window.navigator.onLine) {
+        setError("No internet connection. Please check your network and try again.");
+      } else if (error.message === "Failed to fetch") {
+        setError("Unable to connect to the server. Please try again later.");
+      } else if (error.message.includes("Invalid credentials") || error.message.includes("Incorrect username or password")) {
+        setError("Invalid email or password. Please try again.");
+      } else if (error.message.includes("Session expired")) {
+        setError("Your session has expired. Please login again.");
+      } else {
+        // Handle other errors
+        setError(error.message || "An error occurred. Please try again.");
+      }
       console.error("Login error:", error);
-      // Toast is shown by api.handleResponse
     } finally {
       setIsLoading(false);
     }
@@ -54,6 +70,12 @@ const Login = () => {
           
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
               <div className="space-y-2">
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
